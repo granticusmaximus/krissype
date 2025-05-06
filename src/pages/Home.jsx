@@ -1,3 +1,4 @@
+// src/pages/Home.jsx (with onDelete passed to RecipeCard)
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Input, Label } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
