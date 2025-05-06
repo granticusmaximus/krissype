@@ -8,8 +8,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/add" element={<RecipeForm />} />
-      <Route path="/edit/:id" element={<RecipeForm />} /> {/* ✅ Edit route */}
-      <Route path="/recipe/:id" element={<RecipeView />} />
+      <Route path="/edit/:id" element={<RecipeForm />} />
+      <Route path="/view/:id" element={<RecipeView />} /> {/* 👈 This is critical */}
     </Routes>
   );
 }
