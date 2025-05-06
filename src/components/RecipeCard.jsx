@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardBody, CardImg, CardTitle } from 'reactstrap';
-import './RecipeCard.css'; // optional if using external styles
 
 const RecipeCard = ({ title, imageUrl, onClick, course = [], categories = [] }) => {
   return (
