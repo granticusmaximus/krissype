@@ -1,4 +1,3 @@
-// src/pages/RecipeForm.jsx (Full version with react-select for course and categories)
 import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Nav, NavItem, NavLink,
@@ -111,7 +110,9 @@ const RecipeForm = () => {
   const handleSubmit = async () => {
     try {
       let imageUrl = form.imageUrl || '';
-      if (form.image) imageUrl = await uploadImage(form.image);
+      if (form.image) {
+        imageUrl = await uploadImage(form.image); // ensure Firebase returns full URL
+      }
 
       const prepTime = form.prepHours
         ? `${form.prepHours} hr`
@@ -124,7 +125,7 @@ const RecipeForm = () => {
         ...form,
         prepTime,
         cookTime,
-        imageUrl,
+        imageUrl, // ensure saved with recipe
         createdAt: form.createdAt || new Date(),
       };
 
@@ -160,143 +161,52 @@ const RecipeForm = () => {
           <Button color="outline-secondary" onClick={() => navigate('/')}>Cancel</Button>
         </Col>
       </Row>
-
       <Nav tabs className="mb-3">
         {['overview', 'ingredients', 'directions', 'notes', 'nutrition', 'photos'].map(tab => (
           <NavItem key={tab}>
-            <NavLink
-              className={classnames({ active: activeTab === tab })}
-              onClick={() => toggle(tab)}
-            >
+            <NavLink className={classnames({ active: activeTab === tab })} onClick={() => toggle(tab)}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </NavLink>
           </NavItem>
         ))}
       </Nav>
-
       <TabContent activeTab={activeTab}>
         <TabPane tabId="overview">
-          <FormGroup>
-            <Label>Name</Label>
-            <Input name="name" value={form.name} onChange={handleChange} />
-          </FormGroup>
-          <FormGroup>
-            <Label>Source</Label>
-            <Input name="source" value={form.source} onChange={handleChange} />
-          </FormGroup>
-          <FormGroup>
-            <Label>Servings</Label>
-            <Input name="servings" value={form.servings} onChange={handleChange} />
-          </FormGroup>
+          <FormGroup><Label>Name</Label><Input name="name" value={form.name} onChange={handleChange} /></FormGroup>
+          <FormGroup><Label>Source</Label><Input name="source" value={form.source} onChange={handleChange} /></FormGroup>
+          <FormGroup><Label>Servings</Label><Input name="servings" value={form.servings} onChange={handleChange} /></FormGroup>
           <FormGroup>
             <Label>Prep Time</Label>
             <Row>
-              <Col>
-                <Input type="select" name="prepMinutes" value={form.prepMinutes} onChange={handleChange}>
-                  <option value="">-- Minutes --</option>
-                  {minuteOptions.map(min => <option key={min} value={min}>{min} min</option>)}
-                </Input>
-              </Col>
-              <Col>
-                <Input type="select" name="prepHours" value={form.prepHours} onChange={handleChange}>
-                  <option value="">-- Hours --</option>
-                  {hourOptions.map(hr => <option key={hr} value={hr}>{hr} hr</option>)}
-                </Input>
-              </Col>
+              <Col><Input type="select" name="prepMinutes" value={form.prepMinutes} onChange={handleChange}><option value="">-- Minutes --</option>{minuteOptions.map(min => <option key={min} value={min}>{min} min</option>)}</Input></Col>
+              <Col><Input type="select" name="prepHours" value={form.prepHours} onChange={handleChange}><option value="">-- Hours --</option>{hourOptions.map(hr => <option key={hr} value={hr}>{hr} hr</option>)}</Input></Col>
             </Row>
           </FormGroup>
           <FormGroup>
             <Label>Cook Time</Label>
             <Row>
-              <Col>
-                <Input type="select" name="cookMinutes" value={form.cookMinutes} onChange={handleChange}>
-                  <option value="">-- Minutes --</option>
-                  {minuteOptions.map(min => <option key={min} value={min}>{min} min</option>)}
-                </Input>
-              </Col>
-              <Col>
-                <Input type="select" name="cookHours" value={form.cookHours} onChange={handleChange}>
-                  <option value="">-- Hours --</option>
-                  {hourOptions.map(hr => <option key={hr} value={hr}>{hr} hr</option>)}
-                </Input>
-              </Col>
+              <Col><Input type="select" name="cookMinutes" value={form.cookMinutes} onChange={handleChange}><option value="">-- Minutes --</option>{minuteOptions.map(min => <option key={min} value={min}>{min} min</option>)}</Input></Col>
+              <Col><Input type="select" name="cookHours" value={form.cookHours} onChange={handleChange}><option value="">-- Hours --</option>{hourOptions.map(hr => <option key={hr} value={hr}>{hr} hr</option>)}</Input></Col>
             </Row>
           </FormGroup>
-          <FormGroup>
-            <Label>Notes</Label>
-            <Input type="textarea" name="notes" value={form.notes} onChange={handleChange} />
-          </FormGroup>
-          <FormGroup>
-            <Label>Course</Label>
-            <Select
-              isMulti
-              name="course"
-              options={courseOptions.map(c => ({ label: c, value: c }))}
-              value={form.course.map(c => ({ label: c, value: c }))}
-              onChange={(selected) => setForm(prev => ({ ...prev, course: selected.map(s => s.value) }))}
-              classNamePrefix="select"
-            />
+          <FormGroup><Label>Notes</Label><Input type="textarea" name="notes" value={form.notes} onChange={handleChange} /></FormGroup>
+          <FormGroup><Label>Course</Label>
+            <Select isMulti name="course" options={courseOptions.map(c => ({ label: c, value: c }))} value={form.course.map(c => ({ label: c, value: c }))} onChange={(selected) => setForm(prev => ({ ...prev, course: selected.map(s => s.value) }))} classNamePrefix="select" />
             <Input className="mt-2" placeholder="Add new course" value={newCourse} onChange={e => setNewCourse(e.target.value)} />
             <Button size="sm" className="mt-1" onClick={addCourse}>Add Course</Button>
           </FormGroup>
-          <FormGroup>
-            <Label>Categories</Label>
-            <Select
-              isMulti
-              name="categories"
-              options={categoryOptions.map(c => ({ label: c, value: c }))}
-              value={form.categories.map(c => ({ label: c, value: c }))}
-              onChange={(selected) => setForm(prev => ({ ...prev, categories: selected.map(s => s.value) }))}
-              classNamePrefix="select"
-            />
+          <FormGroup><Label>Categories</Label>
+            <Select isMulti name="categories" options={categoryOptions.map(c => ({ label: c, value: c }))} value={form.categories.map(c => ({ label: c, value: c }))} onChange={(selected) => setForm(prev => ({ ...prev, categories: selected.map(s => s.value) }))} classNamePrefix="select" />
             <Input className="mt-2" placeholder="Add new category" value={newCategory} onChange={e => setNewCategory(e.target.value)} />
             <Button size="sm" className="mt-1" onClick={addCategory}>Add Category</Button>
           </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="isFavorite" checked={form.isFavorite} onChange={handleChange} />{' '}
-              Mark as Favorite
-            </Label>
-          </FormGroup>
+          <FormGroup check><Label check><Input type="checkbox" name="isFavorite" checked={form.isFavorite} onChange={handleChange} /> Mark as Favorite</Label></FormGroup>
         </TabPane>
-
-        <TabPane tabId="ingredients">
-          <FormGroup>
-            <Label>Ingredients</Label>
-            <Input type="textarea" name="ingredients" value={form.ingredients} onChange={handleChange} rows="10" />
-          </FormGroup>
-        </TabPane>
-
-        <TabPane tabId="directions">
-          <FormGroup>
-            <Label>Directions</Label>
-            <Input type="textarea" name="directions" value={form.directions} onChange={handleChange} rows="10" />
-          </FormGroup>
-        </TabPane>
-
-        <TabPane tabId="notes">
-          <FormGroup>
-            <Label>Additional Notes</Label>
-            <Input type="textarea" name="notes" value={form.notes} onChange={handleChange} rows="5" />
-          </FormGroup>
-        </TabPane>
-
-        <TabPane tabId="nutrition">
-          {Object.entries(form.nutrition).map(([key, val]) => (
-            <FormGroup key={key}>
-              <Label>{key.charAt(0).toUpperCase() + key.slice(1)}</Label>
-              <Input name={key} value={val} onChange={handleNutritionChange} />
-            </FormGroup>
-          ))}
-        </TabPane>
-
-        <TabPane tabId="photos">
-          <FormGroup>
-            <Label>Upload Photo</Label>
-            <Input type="file" onChange={handleImageChange} accept="image/*" />
-            {imagePreview && <img src={imagePreview} alt="Preview" className="img-fluid mt-2 rounded" style={{ maxHeight: '200px' }} />}
-          </FormGroup>
-        </TabPane>
+        <TabPane tabId="ingredients"><FormGroup><Label>Ingredients</Label><Input type="textarea" name="ingredients" value={form.ingredients} onChange={handleChange} rows="10" /></FormGroup></TabPane>
+        <TabPane tabId="directions"><FormGroup><Label>Directions</Label><Input type="textarea" name="directions" value={form.directions} onChange={handleChange} rows="10" /></FormGroup></TabPane>
+        <TabPane tabId="notes"><FormGroup><Label>Additional Notes</Label><Input type="textarea" name="notes" value={form.notes} onChange={handleChange} rows="5" /></FormGroup></TabPane>
+        <TabPane tabId="nutrition">{Object.entries(form.nutrition).map(([key, val]) => (<FormGroup key={key}><Label>{key.charAt(0).toUpperCase() + key.slice(1)}</Label><Input name={key} value={val} onChange={handleNutritionChange} /></FormGroup>))}</TabPane>
+        <TabPane tabId="photos"><FormGroup><Label>Upload Photo</Label><Input type="file" onChange={handleImageChange} accept="image/*" />{imagePreview && <img src={imagePreview} alt="Preview" className="img-fluid mt-2 rounded" style={{ maxHeight: '200px' }} />}</FormGroup></TabPane>
       </TabContent>
     </Container>
   );

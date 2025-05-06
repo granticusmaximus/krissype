@@ -1,10 +1,13 @@
-// src/pages/Home.jsx (Full version with search bar and tag filtering)
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Input, Label } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
 import RecipeCard from '../components/RecipeCard';
 import { fetchRecipes } from '../services/firestore';
 import { getMetaTags } from '../services/metaService';
+import { db } from '../services/firebase';
+import { doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Home = () => {
   const [recipes, setRecipes] = useState([]);
@@ -14,6 +17,7 @@ const Home = () => {
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastDeleted, setLastDeleted] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +55,37 @@ const Home = () => {
 
     setFilteredRecipes(filtered);
   }, [selectedCourse, selectedCategory, searchTerm, recipes]);
+
+  const handleDelete = async (id) => {
+    const recipeToDelete = recipes.find(r => r.id === id);
+    if (!recipeToDelete) return;
+
+    if (window.confirm('Delete this recipe?')) {
+      await deleteDoc(doc(db, 'recipes', id));
+      setRecipes(prev => prev.filter(r => r.id !== id));
+      setFilteredRecipes(prev => prev.filter(r => r.id !== id));
+      setLastDeleted({ id, data: recipeToDelete });
+
+      toast.success(
+        <>
+          Recipe deleted.
+          <Button color="link" size="sm" onClick={handleUndo} className="ms-2 p-0">Undo</Button>
+        </>,
+        { autoClose: 5000 }
+      );
+    }
+  };
+
+  const handleUndo = async () => {
+    if (lastDeleted) {
+      const ref = doc(db, 'recipes', lastDeleted.id);
+      await setDoc(ref, lastDeleted.data);
+      setRecipes(prev => [...prev, { id: lastDeleted.id, ...lastDeleted.data }]);
+      setFilteredRecipes(prev => [...prev, { id: lastDeleted.id, ...lastDeleted.data }]);
+      toast.dismiss();
+      setLastDeleted(null);
+    }
+  };
 
   return (
     <Container className="py-4">
@@ -108,12 +143,15 @@ const Home = () => {
               title={recipe.name}
               imageUrl={recipe.imageUrl}
               onClick={() => navigate(`/view/${recipe.id}`)}
+              onDelete={() => handleDelete(recipe.id)}
               course={recipe.course}
               categories={recipe.categories}
             />
           </Col>
         ))}
       </Row>
+
+      <ToastContainer position="bottom-right" />
     </Container>
   );
 };
