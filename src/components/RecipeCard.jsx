@@ -1,11 +1,11 @@
-// src/components/RecipeCard.jsx
+// src/components/RecipeCard.jsx (with reliable placeholder fallback)
 import React from 'react';
 import { Card, CardBody, CardImg, CardTitle, Button } from 'reactstrap';
 
 const RecipeCard = ({ title, imageUrl, onClick, onDelete, course = [], categories = [] }) => {
   const safeImageUrl = imageUrl && imageUrl.length > 0
     ? imageUrl
-    : 'https://via.placeholder.com/300x200?text=No+Image';
+    : 'https://placehold.co/300x200?text=No+Image';
 
   return (
     <Card
@@ -21,15 +21,14 @@ const RecipeCard = ({ title, imageUrl, onClick, onDelete, course = [], categorie
         alt={title}
         style={{ objectFit: 'cover' }}
       />
-      
-      {/* Delete Button */}
+
       {onDelete && (
         <Button
           color="danger"
           size="sm"
           className="position-absolute top-0 end-0 m-2"
           onClick={(e) => {
-            e.stopPropagation(); // prevent card click
+            e.stopPropagation();
             onDelete();
           }}
         >
