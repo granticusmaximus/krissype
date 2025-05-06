@@ -14,4 +14,4 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
-serviceWorkerRegistration.register();
+serviceWorkerRegistration.unregister();
