@@ -48,7 +48,7 @@ const Home = () => {
       const lower = searchTerm.toLowerCase();
       filtered = filtered.filter(r =>
         r.name?.toLowerCase().includes(lower) ||
-        r.ingredients?.toLowerCase().includes(lower) ||
+        (Array.isArray(r.ingredients) ? r.ingredients.some(i => i.toLowerCase().includes(lower)) : false) ||
         r.course?.some(c => c.toLowerCase().includes(lower)) ||
         r.categories?.some(cat => cat.toLowerCase().includes(lower))
       );
@@ -91,9 +91,12 @@ const Home = () => {
   return (
     <Container className="py-4">
       <Row className="mb-3">
-        <Col><h2>Recipes</h2></Col>
+        <Col><h2>Krissy's Recipes</h2></Col>
         <Col className="text-end">
-          <Button color="primary" onClick={() => navigate('/add')}>+ Add Recipe</Button>
+          <Button color="primary" onClick={() => navigate('/add')}>
+          <i class="bi bi-patch-plus-fill"></i>
+            Add Recipe
+          </Button>
         </Col>
       </Row>
 
@@ -145,6 +148,7 @@ const Home = () => {
               imageUrl={recipe.imageUrl}
               onClick={() => navigate(`/view/${recipe.id}`)}
               onDelete={() => handleDelete(recipe.id)}
+              deleteIcon="bi bi-trash"
               course={recipe.course}
               categories={recipe.categories}
             />
