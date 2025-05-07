@@ -32,7 +32,7 @@ const RecipeCard = ({ title, imageUrl, onClick, onDelete, course = [], categorie
             onDelete();
           }}
         >
-          🗑️
+          <i className="bi bi-trash"></i>
         </Button>
       )}
 
