@@ -94,7 +94,7 @@ const Home = () => {
         <Col><h2>Krissy's Recipes</h2></Col>
         <Col className="text-end">
           <Button color="primary" onClick={() => navigate('/add')}>
-          <i class="bi bi-patch-plus-fill"></i>
+          <i className="bi bi-patch-plus-fill"></i>
             Add Recipe
           </Button>
         </Col>

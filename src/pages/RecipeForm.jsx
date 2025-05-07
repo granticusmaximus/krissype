@@ -6,12 +6,13 @@ import {
 import classnames from 'classnames';
 import { useNavigate, useParams } from 'react-router-dom';
 import { addRecipe } from '../services/firestore';
-import { uploadImage } from '../services/storage';
 import { getMetaTags, addMetaTag } from '../services/metaService';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { FaArrowLeft } from 'react-icons/fa';
 import Select from 'react-select';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../services/firebase';
 
 const RecipeForm = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -34,7 +35,6 @@ const RecipeForm = () => {
     imageUrl: '',
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
   const [courseOptions, setCourseOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [newCourse, setNewCourse] = useState('');
@@ -61,7 +61,6 @@ const RecipeForm = () => {
             cookMinutes: data.cookTime?.includes('min') ? data.cookTime.split(' ')[0] : '',
             image: null
           });
-          if (data.imageUrl) setImagePreview(data.imageUrl);
         }
       }
     };
@@ -81,14 +80,6 @@ const RecipeForm = () => {
   const handleNutritionChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, nutrition: { ...prev.nutrition, [name]: value } }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setForm(prev => ({ ...prev, image: file }));
-      setImagePreview(URL.createObjectURL(file));
-    }
   };
 
   const addCourse = async () => {
@@ -111,7 +102,15 @@ const RecipeForm = () => {
     try {
       let imageUrl = form.imageUrl || '';
       if (form.image) {
-        imageUrl = await uploadImage(form.image); // ensure Firebase returns full URL
+        try {
+          const storageRef = ref(storage, `recipe-images/${Date.now()}_${form.image.name}`);
+          await uploadBytes(storageRef, form.image);
+          imageUrl = await getDownloadURL(storageRef);
+        } catch (err) {
+          console.error('Image upload failed:', err);
+          alert('Failed to upload image. Please try again.');
+          return;
+        }
       }
 
       const prepTime = form.prepHours
@@ -121,11 +120,14 @@ const RecipeForm = () => {
         ? `${form.cookHours} hr`
         : form.cookMinutes ? `${form.cookMinutes} min` : '';
 
+      // Exclude image field from Firestore
+      const { image, ...formWithoutImage } = form;
+
       const recipeData = {
-        ...form,
+        ...formWithoutImage,
         prepTime,
         cookTime,
-        imageUrl, // ensure saved with recipe
+        imageUrl,
         createdAt: form.createdAt || new Date(),
       };
 
@@ -162,7 +164,7 @@ const RecipeForm = () => {
         </Col>
       </Row>
       <Nav tabs className="mb-3">
-        {['overview', 'ingredients', 'directions', 'notes', 'nutrition', 'photos'].map(tab => (
+        {['overview', 'ingredients', 'directions', 'notes', 'nutrition'].map(tab => (
           <NavItem key={tab}>
             <NavLink className={classnames({ active: activeTab === tab })} onClick={() => toggle(tab)}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -206,7 +208,6 @@ const RecipeForm = () => {
         <TabPane tabId="directions"><FormGroup><Label>Directions</Label><Input type="textarea" name="directions" value={form.directions} onChange={handleChange} rows="10" /></FormGroup></TabPane>
         <TabPane tabId="notes"><FormGroup><Label>Additional Notes</Label><Input type="textarea" name="notes" value={form.notes} onChange={handleChange} rows="5" /></FormGroup></TabPane>
         <TabPane tabId="nutrition">{Object.entries(form.nutrition).map(([key, val]) => (<FormGroup key={key}><Label>{key.charAt(0).toUpperCase() + key.slice(1)}</Label><Input name={key} value={val} onChange={handleNutritionChange} /></FormGroup>))}</TabPane>
-        <TabPane tabId="photos"><FormGroup><Label>Upload Photo</Label><Input type="file" onChange={handleImageChange} accept="image/*" />{imagePreview && <img src={imagePreview} alt="Preview" className="img-fluid mt-2 rounded" style={{ maxHeight: '200px' }} />}</FormGroup></TabPane>
       </TabContent>
     </Container>
   );
