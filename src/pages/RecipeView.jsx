@@ -36,6 +36,7 @@ const RecipeView = () => {
             notes: data.notes || '—',
             nutrition: typeof data.nutrition === 'object' && data.nutrition !== null ? data.nutrition : {},
             imageUrl: data.imageUrl || '',
+            utensils: data.utensils || [],
           });
         } else {
           console.error('Recipe not found');
@@ -115,6 +116,16 @@ const RecipeView = () => {
                 {Object.entries(recipe.nutrition).map(([key, value]) => (
                   <li key={key}><strong>{key}:</strong> {value}</li>
                 ))}
+              </ul>
+              <p><strong>Utensils Needed:</strong></p>
+              <ul className="mb-3">
+                {recipe.utensils && recipe.utensils.length > 0 ? (
+                  recipe.utensils.map((utensil, idx) => (
+                    <li key={idx}>{utensil}</li>
+                  ))
+                ) : (
+                  <li>None specified</li>
+                )}
               </ul>
             </Col>
           </Row>

@@ -23,8 +23,8 @@ const EditRecipe = () => {
     ingredients: [''],
     directions: [''],
     nutrition: {},
-    imageUrl: '',
-    source: ''
+    source: '',
+    utensils: ['']
   });
   const [availableCourses, setAvailableCourses] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
@@ -75,8 +75,12 @@ const EditRecipe = () => {
                 ? data.directions.split('\n').map(s => s.trim()).filter(Boolean)
                 : ['']),
             nutrition: typeof data.nutrition === 'object' && data.nutrition !== null ? data.nutrition : {},
-            imageUrl: data.imageUrl || '',
-            source: data.source || ''
+            source: data.source || '',
+            utensils: Array.isArray(data.utensils)
+              ? data.utensils
+              : (typeof data.utensils === 'string'
+                ? data.utensils.split('\n').map(s => s.trim()).filter(Boolean)
+                : [''])
           });
         } else {
           toast.error('Recipe not found.');
@@ -180,8 +184,18 @@ const EditRecipe = () => {
         <FormGroup>
           <Label>Ingredients</Label>
           {form.ingredients.map((item, idx) => (
-            <Input key={idx} type="text" className="mb-2" value={item}
-              onChange={(e) => handleArrayChange(idx, 'ingredients', e.target.value)} />
+            <div key={idx} className="d-flex mb-2">
+              <Input type="text" value={item} onChange={(e) => handleArrayChange(idx, 'ingredients', e.target.value)} />
+              <Button size="sm" color="danger" className="ms-2" onClick={(e) => {
+                e.preventDefault();
+                setForm(prev => ({
+                  ...prev,
+                  ingredients: prev.ingredients.filter((_, i) => i !== idx)
+                }));
+              }}>
+                ×
+              </Button>
+            </div>
           ))}
           <Button size="sm" onClick={(e) => {
             e.preventDefault();
@@ -194,8 +208,18 @@ const EditRecipe = () => {
         <FormGroup>
           <Label>Directions</Label>
           {form.directions.map((item, idx) => (
-            <Input key={idx} type="text" className="mb-2" value={item}
-              onChange={(e) => handleArrayChange(idx, 'directions', e.target.value)} />
+            <div key={idx} className="d-flex mb-2">
+              <Input type="text" value={item} onChange={(e) => handleArrayChange(idx, 'directions', e.target.value)} />
+              <Button size="sm" color="danger" className="ms-2" onClick={(e) => {
+                e.preventDefault();
+                setForm(prev => ({
+                  ...prev,
+                  directions: prev.directions.filter((_, i) => i !== idx)
+                }));
+              }}>
+                ×
+              </Button>
+            </div>
           ))}
           <Button size="sm" onClick={(e) => {
             e.preventDefault();
@@ -206,8 +230,39 @@ const EditRecipe = () => {
         </FormGroup>
 
         <FormGroup>
-          <Label for="imageUrl">Image URL</Label>
-          <Input type="text" name="imageUrl" value={form.imageUrl} onChange={handleChange} />
+          <Label>Utensils Needed</Label>
+          {form.utensils.map((item, idx) => (
+            <div key={idx} className="d-flex mb-2">
+              <Input
+                type="text"
+                value={item}
+                onChange={(e) => handleArrayChange(idx, 'utensils', e.target.value)}
+              />
+              <Button
+                size="sm"
+                color="danger"
+                className="ms-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setForm(prev => ({
+                    ...prev,
+                    utensils: prev.utensils.filter((_, i) => i !== idx)
+                  }));
+                }}
+              >
+                ×
+              </Button>
+            </div>
+          ))}
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault();
+              setForm((prev) => ({ ...prev, utensils: [...prev.utensils, ''] }));
+            }}
+          >
+            + Add Utensil
+          </Button>
         </FormGroup>
 
         <FormGroup>

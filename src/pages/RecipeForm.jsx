@@ -6,7 +6,6 @@ import {
 import classnames from 'classnames';
 import { useNavigate, useParams } from 'react-router-dom';
 import { addRecipe } from '../services/firestore';
-import { uploadImage } from '../services/storage';
 import { getMetaTags, addMetaTag } from '../services/metaService';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -24,17 +23,17 @@ const RecipeForm = () => {
     course: [], categories: [],
     prepHours: '', prepMinutes: '',
     cookHours: '', cookMinutes: '',
-    ingredients: '', directions: '', notes: '',
+    ingredients: [],
+    directions: [],
+    notes: '',
     isFavorite: false,
     nutrition: {
       calories: '', fat: '', saturatedFat: '', cholesterol: '',
       sodium: '', carbs: '', fiber: '', sugar: '', protein: ''
     },
-    image: null,
-    imageUrl: '',
+    utensils: [],
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
   const [courseOptions, setCourseOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [newCourse, setNewCourse] = useState('');
@@ -59,9 +58,7 @@ const RecipeForm = () => {
             prepMinutes: data.prepTime?.includes('min') ? data.prepTime.split(' ')[0] : '',
             cookHours: data.cookTime?.includes('hr') ? data.cookTime.split(' ')[0] : '',
             cookMinutes: data.cookTime?.includes('min') ? data.cookTime.split(' ')[0] : '',
-            image: null
           });
-          if (data.imageUrl) setImagePreview(data.imageUrl);
         }
       }
     };
@@ -83,14 +80,6 @@ const RecipeForm = () => {
     setForm(prev => ({ ...prev, nutrition: { ...prev.nutrition, [name]: value } }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setForm(prev => ({ ...prev, image: file }));
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
   const addCourse = async () => {
     if (newCourse && !courseOptions.includes(newCourse)) {
       await addMetaTag('courses', newCourse);
@@ -109,11 +98,6 @@ const RecipeForm = () => {
 
   const handleSubmit = async () => {
     try {
-      let imageUrl = form.imageUrl || '';
-      if (form.image) {
-        imageUrl = await uploadImage(form.image); // ensure Firebase returns full URL
-      }
-
       const prepTime = form.prepHours
         ? `${form.prepHours} hr`
         : form.prepMinutes ? `${form.prepMinutes} min` : '';
@@ -125,7 +109,6 @@ const RecipeForm = () => {
         ...form,
         prepTime,
         cookTime,
-        imageUrl, // ensure saved with recipe
         createdAt: form.createdAt || new Date(),
       };
 
@@ -162,7 +145,7 @@ const RecipeForm = () => {
         </Col>
       </Row>
       <Nav tabs className="mb-3">
-        {['overview', 'ingredients', 'directions', 'notes', 'nutrition', 'photos'].map(tab => (
+        {['overview', 'ingredients', 'directions', 'notes', 'nutrition', 'utensils'].map(tab => (
           <NavItem key={tab}>
             <NavLink className={classnames({ active: activeTab === tab })} onClick={() => toggle(tab)}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -202,11 +185,95 @@ const RecipeForm = () => {
           </FormGroup>
           <FormGroup check><Label check><Input type="checkbox" name="isFavorite" checked={form.isFavorite} onChange={handleChange} /> Mark as Favorite</Label></FormGroup>
         </TabPane>
-        <TabPane tabId="ingredients"><FormGroup><Label>Ingredients</Label><Input type="textarea" name="ingredients" value={form.ingredients} onChange={handleChange} rows="10" /></FormGroup></TabPane>
-        <TabPane tabId="directions"><FormGroup><Label>Directions</Label><Input type="textarea" name="directions" value={form.directions} onChange={handleChange} rows="10" /></FormGroup></TabPane>
+        <TabPane tabId="ingredients">
+          <FormGroup>
+            <Label>Ingredients</Label>
+            {Array.isArray(form.ingredients) ? form.ingredients.map((item, idx) => (
+              <div key={idx} className="d-flex mb-2">
+                <Input
+                  type="text"
+                  value={item}
+                  onChange={(e) => {
+                    const updated = [...form.ingredients];
+                    updated[idx] = e.target.value;
+                    setForm(prev => ({ ...prev, ingredients: updated }));
+                  }}
+                  className="me-2"
+                />
+                <Button color="danger" size="sm" onClick={() => {
+                  const updated = [...form.ingredients];
+                  updated.splice(idx, 1);
+                  setForm(prev => ({ ...prev, ingredients: updated }));
+                }}>Delete</Button>
+              </div>
+            )) : (
+              <p>No ingredients added.</p>
+            )}
+            <Button size="sm" onClick={() => setForm(prev => ({ ...prev, ingredients: [...(prev.ingredients || []), ''] }))}>
+              + Add Ingredient
+            </Button>
+          </FormGroup>
+        </TabPane>
+        <TabPane tabId="directions">
+          <FormGroup>
+            <Label>Directions</Label>
+            {Array.isArray(form.directions) ? form.directions.map((item, idx) => (
+              <div key={idx} className="d-flex mb-2">
+                <Input
+                  type="text"
+                  value={item}
+                  onChange={(e) => {
+                    const updated = [...form.directions];
+                    updated[idx] = e.target.value;
+                    setForm(prev => ({ ...prev, directions: updated }));
+                  }}
+                  className="me-2"
+                />
+                <Button color="danger" size="sm" onClick={() => {
+                  const updated = [...form.directions];
+                  updated.splice(idx, 1);
+                  setForm(prev => ({ ...prev, directions: updated }));
+                }}>Delete</Button>
+              </div>
+            )) : (
+              <p>No directions added.</p>
+            )}
+            <Button size="sm" onClick={() => setForm(prev => ({ ...prev, directions: [...(prev.directions || []), ''] }))}>
+              + Add Step
+            </Button>
+          </FormGroup>
+        </TabPane>
+        <TabPane tabId="utensils">
+          <FormGroup>
+            <Label>Utensils Needed</Label>
+            {Array.isArray(form.utensils) ? form.utensils.map((item, idx) => (
+              <div key={idx} className="d-flex mb-2">
+                <Input
+                  type="text"
+                  value={item}
+                  onChange={(e) => {
+                    const updated = [...form.utensils];
+                    updated[idx] = e.target.value;
+                    setForm(prev => ({ ...prev, utensils: updated }));
+                  }}
+                  className="me-2"
+                />
+                <Button color="danger" size="sm" onClick={() => {
+                  const updated = [...form.utensils];
+                  updated.splice(idx, 1);
+                  setForm(prev => ({ ...prev, utensils: updated }));
+                }}>Delete</Button>
+              </div>
+            )) : (
+              <p>No utensils added.</p>
+            )}
+            <Button size="sm" onClick={() => setForm(prev => ({ ...prev, utensils: [...(prev.utensils || []), ''] }))}>
+              + Add Utensil
+            </Button>
+          </FormGroup>
+        </TabPane>
         <TabPane tabId="notes"><FormGroup><Label>Additional Notes</Label><Input type="textarea" name="notes" value={form.notes} onChange={handleChange} rows="5" /></FormGroup></TabPane>
         <TabPane tabId="nutrition">{Object.entries(form.nutrition).map(([key, val]) => (<FormGroup key={key}><Label>{key.charAt(0).toUpperCase() + key.slice(1)}</Label><Input name={key} value={val} onChange={handleNutritionChange} /></FormGroup>))}</TabPane>
-        <TabPane tabId="photos"><FormGroup><Label>Upload Photo</Label><Input type="file" onChange={handleImageChange} accept="image/*" />{imagePreview && <img src={imagePreview} alt="Preview" className="img-fluid mt-2 rounded" style={{ maxHeight: '200px' }} />}</FormGroup></TabPane>
       </TabContent>
     </Container>
   );
