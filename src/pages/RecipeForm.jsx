@@ -127,7 +127,7 @@ const RecipeForm = () => {
     }
   };
 
-  const minuteOptions = Array.from({ length: 12 }, (_, i) => (i + 1) * 5);
+  const minuteOptions = Array.from({ length: 60 }, (_, i) => i + 1);
   const hourOptions = Array.from({ length: 6 }, (_, i) => i + 1);
 
   return (

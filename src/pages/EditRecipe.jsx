@@ -22,7 +22,17 @@ const EditRecipe = () => {
     notes: '',
     ingredients: [''],
     directions: [''],
-    nutrition: {},
+    nutrition: {
+      calories: '',
+      fat: '',
+      saturatedFat: '',
+      cholesterol: '',
+      sodium: '',
+      carbs: '',
+      fiber: '',
+      sugar: '',
+      protein: ''
+    },
     source: '',
     utensils: ['']
   });
@@ -263,6 +273,23 @@ const EditRecipe = () => {
           >
             + Add Utensil
           </Button>
+        </FormGroup>
+
+        <FormGroup>
+          <Label>Nutrition Facts</Label>
+          {Object.entries(form.nutrition).map(([key, value]) => (
+            <div key={key} className="mb-2">
+              <Label className="form-label text-capitalize">{key.replace(/([A-Z])/g, ' $1')}</Label>
+              <Input
+                type="text"
+                value={value}
+                onChange={(e) => {
+                  const updated = { ...form.nutrition, [key]: e.target.value };
+                  setForm(prev => ({ ...prev, nutrition: updated }));
+                }}
+              />
+            </div>
+          ))}
         </FormGroup>
 
         <FormGroup>
