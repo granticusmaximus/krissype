@@ -69,11 +69,25 @@ const RecipeView = () => {
             ))}
           </div>
           <div className="mb-3">
-            <Button color="primary" className="me-2" onClick={() => navigate(`/edit/${id}`)}>
+            <Button color="outline-primary" className="me-2" onClick={() => navigate(`/edit/${id}`)}>
               Edit Recipe
             </Button>
-            <Button color="secondary" onClick={() => navigate('/')}>
+            
+            <Button color="outline-secondary" className="me-2" onClick={() => navigate('/')}>
               Back to Home
+            </Button>
+
+            <Button
+              color="outline-success"
+              className="me-2"
+              onClick={() => {
+                const shareUrl = `${window.location.origin}/view/${id}`;
+                navigator.clipboard.writeText(shareUrl)
+                  .then(() => alert('Recipe URL copied to clipboard!'))
+                  .catch(err => alert('Failed to copy link.'));
+              }}
+            >
+              Share
             </Button>
           </div>
           <Row className="mb-4">
